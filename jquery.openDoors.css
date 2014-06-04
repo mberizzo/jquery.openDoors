@@ -1,57 +1,54 @@
-body{
-    font-family: 'arial';
-    font-size: 14px;
+.open-doors{
+    width: 350px;
 }
-
-.hours-care{
-    max-width: 350px;
-}
-
-    .hours-care .days-hours{
-        border-bottom: solid 1px #ccc;
-        overflow: hidden;
-        padding: 2px;
+    .open-doors .render-result{
+        margin-bottom: 10px;
     }
-        .hours-care .days-hours a{
-            color: #000;
-            float: right;
-            font-weight: bold;;
+        .open-doors .render-result .days-hours{
+            border-bottom: solid 1px #ccc;
+            overflow: hidden;
+            padding: 2px;
         }
+            .open-doors .render-result .days-hours a{
+                color: #000;
+                float: right;
+                font-weight: bold;
+            }
 
-    .hours-care form{
+    .open-doors form{
         margin-top: 10px
     }
 
-    .hours-care .json{
+    .open-doors .json{
         background-color: #ccc;
         margin-top: 10px;
         padding: 2px;
     }
 
-.hours-care .head input[type="text"]{
+.open-doors .head input[type="text"]{
     width: 40px;
 }
 
-.hours-care ul{
+.open-doors ul{
     display: block;
     padding: 0;
     margin: 10px 0;
 }
-    .hours-care ul li{
+    .open-doors ul li{
         display: inline;
         margin-left: 5px;
     }
-    .hours-care ul li:first-child{
+    .open-doors ul li:first-child{
         margin-left: 0;
     }
-        .hours-care ul li a{
+        .open-doors ul li a{
             border: solid 1px #23599b;
             color: #555;
             font-size: 1.2em;
             padding: 2px;
             text-decoration: none;
         }
-        .hours-care ul li a:hover, .hours-care ul li .active{
+        .open-doors ul li a:hover, .open-doors ul li .active{
             background-color: #23599b;
             color: #fff;
         }

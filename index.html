@@ -8,13 +8,14 @@
     <script src="jquery.openDoors.js"></script>
     <script type="text/javascript">
         $(function(){
-            $('#hours').openDoors();
+            $('#hours').openDoors({
+                firstRenderThis: '[{"days":["lun","mar","mie","jue","vie"],"first":{"from":"09:00","to":"18:00"}}]',
+            });
         })
     </script>
 </head>
 <body>
     <h1>Jquery Open Doors</h1>
     <div id="hours"></div>
-    <input type="hidden" id="hours-result">
 </body>
 </html>
