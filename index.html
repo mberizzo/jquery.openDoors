@@ -9,7 +9,9 @@
     <script type="text/javascript">
         $(function(){
             $('#hours').openDoors({
-                firstRenderThis: '[{"days":["lun","mar","mie","jue","vie"],"first":{"from":"09:00","to":"18:00"}}]',
+                onAfterSave: function(){
+                    // alert('item saved!');
+                },
             });
         })
     </script>

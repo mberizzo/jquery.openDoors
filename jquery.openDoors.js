@@ -8,12 +8,12 @@
         // default settings
         var defaults = {
             days: ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'], // weeks day
-            debbug: false, // show json in screen
             firstRenderThis: false, // string json format
-            onAfterSave: function(newVal){},
+            onAfterSave: function(){},
         };
 
         methods.options = $.extend(true, {}, defaults, options);
+        methods.options.days = options.days ? options.days : methods.options.days;
 
         this.each(function(index) {
             $el = $(this);
@@ -50,7 +50,7 @@
             tpl += '<div class="open-doors">';
             tpl +=     '<div class="render-result"></div>';
             tpl +=     '<div class="head">';
-            tpl +=         '<input type="text" class="i1" placeholder="hh:mm"> a <input type="text" class="i2" placeholder="hh:mm">';
+            tpl +=         '<input value="10:00" type="text" class="i1" placeholder="hh:mm"> a <input value="10:00" type="text" class="i2" placeholder="hh:mm">';
             tpl +=         '<input class="part-check" type="checkbox">';
             tpl +=         '<input type="text" class="i3" placeholder="hh:mm" disabled="disabled"> a <input type="text" class="i4" placeholder="hh:mm" disabled="disabled">';
             tpl +=     '</div>';
@@ -60,7 +60,6 @@
             tpl +=         '<input type="submit" value="Guardar"><input type="reset" value="Cancelar">';
             tpl +=     '</div>';
             tpl +=     '<input type="hidden" name="h'+elx+'">';
-            tpl +=     methods.options.debbug ? '<div class="json"></div>' : '';
             tpl += '</div>';
             return tpl;
         },
@@ -165,7 +164,7 @@
             var tpl = '', render = '';
             $.each(this.result, function(id, json) {
                 tpl += '<div class="days-hours">';
-                tpl +=     json['days'].join(', ')+': '+json['first']['from']+' - '+json['first']['to'];
+                tpl +=     utils.formatDays(json['days'])+': '+json['first']['from']+' - '+json['first']['to'];
                 tpl +=     json['last']? ' &amp; '+json['last']['from']+' - '+json['last']['to'] : '';
                 tpl +=     '<a href="#" class="remove" data-id="'+id+'">x</a>';
                 tpl += '</div>';
@@ -201,6 +200,51 @@
 
         result: [], // partial json days hours
 
+    };
+
+    var utils = {
+        // get [lun, mar, mie, sab] response lun-mie, sab
+        formatDays: function(json){
+            var v = {
+                aux: '',
+                key: 0,
+                compare: methods.options.days,
+                length: json.length,
+                range: [],
+                getKey: function(array, value){
+                    for (var i = 0; i < array.length; i++) {
+                        if (array[i] == value) return i;
+                    }
+                },
+            };
+
+            for (var i = 0; i < v.length; i++) {
+                v.key = parseInt( v.getKey(v.compare, json[i]) );
+                if ( (json[i+1] == v.compare[v.key+1]) && (json[i+1] != undefined) ) {
+                    v.aux += json[i]+'-';
+                } else if ( (json[i-1] == v.compare[v.key-1]) && (json[i-1] != undefined) ) {
+                    v.aux += json[i]+',';
+                } else {
+                    v.aux += json[i]+',';
+                }
+            }
+
+            v.aux = v.aux.substr(0, v.aux.length-1);
+
+            v.range = v.aux.split(',');
+
+            $.each(v.range, function(index, val) {
+                val = val.split('-');
+                v.range[index] = val.length > 1 ? val[0]+'-'+ val[val.length-1] : val[0];
+            });
+
+            return v.range.join(', ');
+        },
+
+        // validate
+        validate: function(){
+
+        },
     };
 
 })(jQuery);
