@@ -9,11 +9,16 @@
         var defaults = {
             days: ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'], // weeks day
             firstRenderThis: false, // string json format
+            readOnly: false,
             onAfterSave: function(){},
         };
 
         methods.options = $.extend(true, {}, defaults, options);
-        methods.options.days = options.days ? options.days : methods.options.days;
+
+        // replace all days, not combine
+        if (options !== undefined && options.days !== undefined) {
+            methods.options.days =  options.days;
+        }
 
         this.each(function(index) {
             $el = $(this);
@@ -33,6 +38,7 @@
                 var json = JSON.parse(this.options.firstRenderThis);
                 this.result = json;
                 this.renderHours();
+                if (this.options.readOnly) return;
                 this._updateHiddenVal(); // complete hidden field
             }
 
@@ -49,17 +55,19 @@
             var tpl = '';
             tpl += '<div class="open-doors">';
             tpl +=     '<div class="render-result"></div>';
-            tpl +=     '<div class="head">';
-            tpl +=         '<input value="10:00" type="text" class="i1" placeholder="hh:mm"> a <input value="10:00" type="text" class="i2" placeholder="hh:mm">';
-            tpl +=         '<input class="part-check" type="checkbox">';
-            tpl +=         '<input type="text" class="i3" placeholder="hh:mm" disabled="disabled"> a <input type="text" class="i4" placeholder="hh:mm" disabled="disabled">';
-            tpl +=     '</div>';
-            tpl +=     '<ul class="days"><li><a href="#">'+this.options.days.join('</a></li><li><a href="#">')+'</a></li></ul>';
-            tpl +=     '<div class="foot">';
-            tpl +=         '<span><input type="checkbox" id="h'+elx+'" class="select-all"><label for="h'+elx+'">Seleccionar todos</label></span>';
-            tpl +=         '<input type="submit" value="Guardar"><input type="reset" value="Cancelar">';
-            tpl +=     '</div>';
-            tpl +=     '<input type="hidden" name="h'+elx+'">';
+            if (! this.options.readOnly) {
+                tpl +=     '<div class="head">';
+                tpl +=         '<input autofocus type="time" class="i1" placeholder="hh:mm"> a <input type="time" class="i2" placeholder="hh:mm">';
+                tpl +=         '<input class="part-check" type="checkbox">';
+                tpl +=         '<input type="time" class="i3" placeholder="hh:mm" disabled="disabled"> a <input type="time" class="i4" placeholder="hh:mm" disabled="disabled">';
+                tpl +=     '</div>';
+                tpl +=     '<ul class="days"><li><a href="#">'+this.options.days.join('</a></li><li><a href="#">')+'</a></li></ul>';
+                tpl +=     '<div class="foot">';
+                tpl +=         '<span><input type="checkbox" id="h'+elx+'" class="select-all"><label for="h'+elx+'">Seleccionar todos</label></span>';
+                tpl +=         '<input type="submit" value="Guardar"><input type="reset" value="Cancelar">';
+                tpl +=     '</div>';
+                tpl +=     '<input type="hidden" name="h'+elx+'">';
+            }
             tpl += '</div>';
             return tpl;
         },
@@ -105,41 +113,34 @@
             $buttonSubmit.on('click', function(event) {
                 event.preventDefault();
                 $days = $el.find('.days .active');
-                if ($days.length) { // check if selected any day
-                    var response = {}, aux = {}, day = '', input = $el.find('.i1, .i2, .i3, .i4'); // vars declare
-
-                    // validate inputs
-                    var patt = new RegExp('(0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9]){1}'), error = false;
-                    $.each([input[0], input[1]], function(index, el) {
-                        if (el.value.match(patt) === null) error = true;
-                    });
-                    if (error) return false;
-
-                    aux.days = []; // days array
-                    aux.first = {}; // hours
+                if ($days.length) { // check if selected some day
+                    var aux = {}, day = '', input = $el.find('.i1, .i2, .i3, .i4'); // vars declare
 
                     // set first time
+                    aux.first = {}; // json declare
                     aux.first.from = input[0].value; // hours from
                     aux.first.to = input[1].value; // hours to
+                    if (! utils.validateTime(aux)) return false; // validate time
+
+                    // set last time
+                    if ( $el.find('.part-check').is(':checked') ) { // check part time status
+                        aux.last = {}; // json declare
+                        aux.last.from = input[2].value; // hours from
+                        aux.last.to = input[3].value; // hours to
+                        if (! utils.validateTime(aux, true)) return false; // validate time
+                    }
+
+
+                    aux.days = []; // days array
                     $days.each(function(index, el){
                         day = $(el).text();
                         aux.days.push(day);
                     });
 
-                    if ( $el.find('.part-check').is(':checked') ) { // check part time status
-                        // validate parts inputs
-                        $.each([input[2], input[3]], function(index, el) {
-                            if (el.value.match(patt) === null) error = true;
-                        });
-                        if (error) return false;
-
-                        // set last time
-                        aux.last = {}; // json declare
-                        aux.last.from = input[2].value; // hours from
-                        aux.last.to = input[3].value; // hours to
-                    }
+                    if (! utils.validateExists(aux)) return false; // validate if this hours range exists
 
                     methods.result[methods.result.length] = aux; // generate id
+
                     methods._updateHiddenVal(); // complete hidden field
                     methods.renderHours(); // render days and hours
 
@@ -161,12 +162,12 @@
 
         // render table when save is clicked
         renderHours: function(){
-            var tpl = '', render = '';
+            var tpl = '', render = '', readOnly = this.options.readOnly;
             $.each(this.result, function(id, json) {
                 tpl += '<div class="days-hours">';
                 tpl +=     utils.formatDays(json['days'])+': '+json['first']['from']+' - '+json['first']['to'];
                 tpl +=     json['last']? ' &amp; '+json['last']['from']+' - '+json['last']['to'] : '';
-                tpl +=     '<a href="#" class="remove" data-id="'+id+'">x</a>';
+                tpl +=     readOnly ? '' : '<a href="#" class="remove" data-id="'+id+'">x</a>';
                 tpl += '</div>';
                 render += tpl;
                 tpl = '';
@@ -203,47 +204,109 @@
     };
 
     var utils = {
-        // get [lun, mar, mie, sab] response lun-mie, sab
+        /**
+         * Format days
+         * Get [lun, mar, mie, sab]. Response lun-mie, sab
+         */
         formatDays: function(json){
-            var v = {
-                aux: '',
-                key: 0,
-                compare: methods.options.days,
-                length: json.length,
-                range: [],
-                getKey: function(array, value){
+            var aux = '',
+                key = 0,
+                compare = methods.options.days,
+                length = json.length,
+                range = [],
+                getKey = function(array, value){
                     for (var i = 0; i < array.length; i++) {
                         if (array[i] == value) return i;
                     }
-                },
-            };
+                };
 
-            for (var i = 0; i < v.length; i++) {
-                v.key = parseInt( v.getKey(v.compare, json[i]) );
-                if ( (json[i+1] == v.compare[v.key+1]) && (json[i+1] != undefined) ) {
-                    v.aux += json[i]+'-';
-                } else if ( (json[i-1] == v.compare[v.key-1]) && (json[i-1] != undefined) ) {
-                    v.aux += json[i]+',';
+            for (var i = 0; i < length; i++) {
+                key = parseInt( getKey(compare, json[i]) );
+                if ( (json[i+1] == compare[key+1]) && (json[i+1] != undefined) ) {
+                    aux += json[i]+'-';
+                } else if ( (json[i-1] == compare[key-1]) && (json[i-1] != undefined) ) {
+                    aux += json[i]+',';
                 } else {
-                    v.aux += json[i]+',';
+                    aux += json[i]+',';
                 }
             }
 
-            v.aux = v.aux.substr(0, v.aux.length-1);
+            aux = aux.substr(0, aux.length-1);
 
-            v.range = v.aux.split(',');
+            range = aux.split(',');
 
-            $.each(v.range, function(index, val) {
+            $.each(range, function(index, val) {
                 val = val.split('-');
-                v.range[index] = val.length > 1 ? val[0]+'-'+ val[val.length-1] : val[0];
+                range[index] = val.length > 1 ? val[0]+'-'+ val[val.length-1] : val[0];
             });
 
-            return v.range.join(', ');
+            return range.join(', ');
         },
 
-        // validate
-        validate: function(){
+        setError: function($selector){
+            return alert('error');
+        },
 
+        /**
+         * Validate if time are posible
+         */
+        validateTime: function(time, last){
+            var patt = new RegExp('(0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9]){1}'),
+                valid = false;
+            if (last === undefined) {
+                // first time
+                if (time.first.from.match(patt) === null) {
+                    utils.setError();
+                } else if (time.first.to.match(patt) === null || time.first.to <= time.first.from) {
+                    utils.setError();
+                } else {
+                    valid = true;
+                }
+            } else {
+                // last time
+                if (time.last.from.match(patt) === null || time.last.from <= time.first.to) {
+                    utils.setError();
+                } else if (time.last.to.match(patt) === null || time.last.to <= time.last.from) {
+                    utils.setError();
+                } else {
+                    valid = true;
+                }
+            }
+            return valid;
+        },
+
+        /**
+         * Validate collision, if exists
+         */
+        validateExists: function(json){
+            var compare = methods.result;
+            if (compare.length) {
+                for (var i = 0; i < compare.length; i++) {
+                    // search day
+                    for (var x = 0; x < compare[i].days.length; x++) {
+                        // if day in array
+                        if ($.inArray(compare[i].days[x], json.days) > -1) {
+                            // verify hours
+                            if ( (json.first.from >= compare[i].first.from &&
+                                 json.first.from <= compare[i].first.to) ||
+                                 (json.first.to >= compare[i].first.from &&
+                                 json.first.to <= compare[i].first.to) ) {
+                                alert('El 1er rango de horario se superpone');
+                                return false;
+                            } else if ( (json.last !== undefined &&
+                                        compare[i].last !== undefined) &&
+                                        ((json.last.from >= compare[i].last.from &&
+                                        json.last.from <= compare[i].last.to) ||
+                                        (json.last.to >= compare[i].last.from &&
+                                        json.last.to <= compare[i].last.to)) ) {
+                                alert('El 2do rango de horario se superpone');
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
         },
     };
 

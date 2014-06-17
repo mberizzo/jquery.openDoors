@@ -8,16 +8,17 @@
     <script src="jquery.openDoors.js"></script>
     <script type="text/javascript">
         $(function(){
-            $('#hours').openDoors({
-                onAfterSave: function(){
-                    // alert('item saved!');
-                },
+            $('.hours').openDoors({
+                // firstRenderThis: '[{"days":["sab"],"first":{"from":"08:00","to":"12:00"}}]',
+                // readOnly: true,
             });
         })
     </script>
 </head>
 <body>
     <h1>Jquery Open Doors</h1>
-    <div id="hours"></div>
+    <div class="hours"></div>
+    <div class="hours"></div>
+    <div class="hours"></div>
 </body>
 </html>

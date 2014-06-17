@@ -1,5 +1,5 @@
 .open-doors{
-    width: 350px;
+    width: 400px;
 }
     .open-doors .render-result{
         margin-bottom: 10px;
@@ -24,10 +24,6 @@
         margin-top: 10px;
         padding: 2px;
     }
-
-.open-doors .head input[type="text"]{
-    width: 40px;
-}
 
 .open-doors ul{
     display: block;
