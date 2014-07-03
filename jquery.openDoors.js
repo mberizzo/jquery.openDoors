@@ -64,7 +64,7 @@
                 tpl +=     '<ul class="days"><li><a href="#">'+this.options.days.join('</a></li><li><a href="#">')+'</a></li></ul>';
                 tpl +=     '<div class="foot">';
                 tpl +=         '<span><input type="checkbox" id="h'+elx+'" class="select-all"><label for="h'+elx+'">Seleccionar todos</label></span>';
-                tpl +=         '<input type="submit" value="Guardar"><input type="reset" value="Cancelar">';
+                tpl +=         '<input type="submit" value="Guardar"><input type="button" class="reset" value="Cancelar">';
                 tpl +=     '</div>';
                 tpl +=     '<input type="hidden" name="h'+elx+'">';
             }
@@ -99,7 +99,7 @@
 
         // reset
         _bindReset: function(){
-            $el.find('input[type="reset"]').on('click', function() {
+            $el.find('input.reset').on('click', function() {
                 $el.find('.days a').removeClass('active');
                 $el.find('.select-all, .part-check').removeAttr('checked');
                 $el.find('.i1, .i2, .i3, .i4').val('');
@@ -144,7 +144,7 @@
                     methods._updateHiddenVal(); // complete hidden field
                     methods.renderHours(); // render days and hours
 
-                    $el.find('input[type="reset"]').trigger('click'); // reset
+                    $el.find('input.reset').trigger('click'); // reset
 
                     methods.options.onAfterSave.call(); // callback
                 } else {
