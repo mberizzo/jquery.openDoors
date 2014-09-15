@@ -1,72 +1,55 @@
 ;(function($) {
-
-    var $el, elx;
-
-    $.fn.openDoors = function(options){
-        if (! this.length) return this;
-
-        // default settings
-        var defaults = {
-            days: ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'], // weeks day
-            firstRenderThis: false, // string json format
-            readOnly: false,
-            onAfterSave: function(){},
-        };
-
-        methods.options = $.extend(true, {}, defaults, options);
-
-        // replace all days, not combine
-        if (options !== undefined && options.days !== undefined) {
-            methods.options.days =  options.days;
-        }
-
-        this.each(function(index) {
-            $el = $(this);
-            elx = index;
-            methods.init();
-        });
-    };
+    'use strict';
 
     var methods = {
+        init: function(options){
+            return this.each(function(index){
+                this.self = $(this);
+                this.elx = index;
 
-        init: function(){
-            var view = this.renderForm(); // form render
-            $el.html(view); // load view in element
+                methods.opt = $.extend(true, {}, $.fn.openDoors.defaults, options);
 
-            // check if need render something
-            if (this.options.firstRenderThis) {
-                var json = JSON.parse(this.options.firstRenderThis);
-                this.result = json;
-                this.renderHours();
-                if (this.options.readOnly) return;
-                this._updateHiddenVal(); // complete hidden field
-            }
+                var render = methods.renderForm.call(this); // form render
 
-            this._bindActivePartTime(); // active part time hours
-            this._bindSelectDay(); // click on a day
-            this._bindSelectAllDays(); // select all days
-            this._bindReset(); // reset
-            this._bindSubmit(); // submit form
-            this._checkSubmitStatus(); // check id submit button can be enable
+                // load view in element
+                this.self.html(render);
+
+                // check if need render something
+                if (methods.opt.firstRenderThis) {
+                    methods.result = JSON.parse(methods.opt.firstRenderThis);
+                    methods.renderHours.call(this);
+                    if (methods.opt.readOnly) return;
+                    methods._updateHiddenVal.call(this); // complete hidden field
+                }
+
+                methods._bindActivePartTime.call(this); // active part time hours
+                methods._bindSelectDay.call(this); // click on a day
+                methods._bindSelectAllDays.call(this); // select all days
+                methods._bindReset.call(this); // reset
+                methods._bindSubmit.call(this); // submit form
+                methods._checkSubmitStatus.call(this); // check id submit button can be enable                
+            });
         },
 
-        // render the form html view
+        /**
+         * Render the form html view
+         */
         renderForm: function(){
             var tpl = '';
             tpl += '<div class="open-doors">';
             tpl +=     '<div class="render-result"></div>';
-            if (! this.options.readOnly) {
+            if (! methods.opt.readOnly) {
                 tpl +=     '<div class="head">';
-                tpl +=         '<input autofocus type="time" class="i1" placeholder="hh:mm"> a <input type="time" class="i2" placeholder="hh:mm">';
+                tpl +=         '<input type="time" class="i1" placeholder="hh:mm"> a <input type="time" class="i2" placeholder="hh:mm">';
                 tpl +=         '<input class="part-check" type="checkbox">';
                 tpl +=         '<input type="time" class="i3" placeholder="hh:mm" disabled="disabled"> a <input type="time" class="i4" placeholder="hh:mm" disabled="disabled">';
                 tpl +=     '</div>';
-                tpl +=     '<ul class="days"><li><a href="#">'+this.options.days.join('</a></li><li><a href="#">')+'</a></li></ul>';
+                tpl +=     '<ul class="days"><li><a href="#">'+methods.opt.days.join('</a></li><li><a href="#">')+'</a></li></ul>';
                 tpl +=     '<div class="foot">';
-                tpl +=         '<span><input type="checkbox" id="h'+elx+'" class="select-all"><label for="h'+elx+'">Seleccionar todos</label></span>';
+                tpl +=         '<span><input type="checkbox" id="h'+this.elx+'" class="select-all"><label for="h'+this.elx+'">Seleccionar todos</label></span>';
                 tpl +=         '<input type="submit" value="Guardar"><input type="button" class="reset" value="Cancelar">';
                 tpl +=     '</div>';
-                tpl +=     '<input type="hidden" name="h'+elx+'">';
+                tpl +=     '<input type="hidden" name="h'+this.elx+'">';
             }
             tpl += '</div>';
             return tpl;
@@ -74,15 +57,17 @@
 
         // click on checkbox that active part time inputs
         _bindActivePartTime: function(){
+            var that = this.self;
             $('.part-check').on('change', function(){
-                $el.find('.i3, .i4').attr('disabled', this.defaultChecked);
+                that.find('.i3, .i4').attr('disabled', this.defaultChecked);
                 this.defaultChecked = ! this.defaultChecked;
             });
         },
 
         // select one day
         _bindSelectDay: function(){
-            $el.find('.days a').on('click', function(event){
+            var that = this.self;
+            that.find('.days a').on('click', function(event){
                 event.preventDefault();
                 $(this).hasClass('active') ? $(this).removeClass('active') : $(this).addClass('active');
             });
@@ -90,8 +75,9 @@
 
         // select all days
         _bindSelectAllDays: function(){
-            $el.find('.select-all').on('change', function(){
-                var $days = $el.find('.days a');
+            var that = this.self;
+            that.find('.select-all').on('change', function(){
+                var $days = that.find('.days a');
                 this.defaultChecked ? $days.removeClass('active') : $days.addClass('active');
                 this.defaultChecked = ! this.defaultChecked;
             });
@@ -99,40 +85,51 @@
 
         // reset
         _bindReset: function(){
-            $el.find('input.reset').on('click', function() {
-                $el.find('.days a').removeClass('active');
-                $el.find('.select-all, .part-check').removeAttr('checked');
-                $el.find('.i1, .i2, .i3, .i4').val('');
-                $el.find('.i3, .i4').attr('disabled', 'disabled');
+            var that = this.self;
+            that.find('input.reset').on('click', function() {
+                that.find('.days a').removeClass('active');
+                that.find('.select-all, .part-check').removeAttr('checked');
+                that.find('.i1, .i2, .i3, .i4').val('');
+                that.find('.i3, .i4').attr('disabled', 'disabled');
             });
         },
 
         // submit form
         _bindSubmit: function(){
-            $buttonSubmit = $el.find('input[type="submit"]');
-            $buttonSubmit.on('click', function(event) {
+            var
+                self       = this,
+                that       = this.self,
+                $btnSubmit = that.find('input[type="submit"]');
+
+            $btnSubmit.on('click', function(event) {
                 event.preventDefault();
-                $days = $el.find('.days .active');
-                if ($days.length) { // check if selected some day
-                    var aux = {}, day = '', input = $el.find('.i1, .i2, .i3, .i4'); // vars declare
+
+                var $selectedDays = that.find('.days .active');
+
+                // check if selected some day
+                if ($selectedDays.length) {
+                    var
+                        aux   = {},
+                        day   = '',
+                        input = that.find('.i1, .i2, .i3, .i4');
 
                     // set first time
-                    aux.first = {}; // json declare
+                    aux.first = {}; // is obj
                     aux.first.from = input[0].value; // hours from
                     aux.first.to = input[1].value; // hours to
                     if (! utils.validateTime(aux)) return false; // validate time
 
                     // set last time
-                    if ( $el.find('.part-check').is(':checked') ) { // check part time status
-                        aux.last = {}; // json declare
+                    if ( that.find('.part-check').is(':checked') ) { // check part time status
+                        aux.last = {}; // is obj
                         aux.last.from = input[2].value; // hours from
                         aux.last.to = input[3].value; // hours to
                         if (! utils.validateTime(aux, true)) return false; // validate time
                     }
 
-
                     aux.days = []; // days array
-                    $days.each(function(index, el){
+
+                    $selectedDays.each(function(index, el){
                         day = $(el).text();
                         aux.days.push(day);
                     });
@@ -141,14 +138,14 @@
 
                     methods.result[methods.result.length] = aux; // generate id
 
-                    methods._updateHiddenVal(); // complete hidden field
-                    methods.renderHours(); // render days and hours
+                    methods._updateHiddenVal.call(self); // complete hidden field
+                    methods.renderHours.call(self); // render days and hours
 
-                    $el.find('input.reset').trigger('click'); // reset
+                    that.find('input.reset').trigger('click'); // reset
 
-                    methods.options.onAfterSave.call(); // callback
+                    methods.opt.onAfterSave.call(); // callback
                 } else {
-                    // alert('Please, select a day');
+                    alert('Please, select a day');
                     return false;
                 }
             });
@@ -156,29 +153,43 @@
 
         // check if submit can be enable
         _checkSubmitStatus: function(){
-            var i = $el.find('.i1, .i2');
+            var that = this.self;
+            var i = that.find('.i1, .i2');
             // console.log(i[0].value, i[1].value);
         },
 
         // render table when save is clicked
         renderHours: function(){
-            var tpl = '', render = '', readOnly = this.options.readOnly;
-            $.each(this.result, function(id, json) {
+            var
+                self   = this,
+                that   = this.self,
+                tpl    = '',
+                render = '';
+
+            $.each(methods.result, function(id, json) {
                 tpl += '<div class="days-hours">';
                 tpl +=     utils.formatDays(json['days'])+': '+json['first']['from']+' - '+json['first']['to'];
                 tpl +=     json['last']? ' &amp; '+json['last']['from']+' - '+json['last']['to'] : '';
-                tpl +=     readOnly ? '' : '<a href="#" class="remove" data-id="'+id+'">x</a>';
+                tpl +=     methods.opt.readOnly ? '' : '<a href="#" class="remove" data-id="'+id+'">x</a>';
                 tpl += '</div>';
                 render += tpl;
                 tpl = '';
             });
-            $el.find('.render-result').html(render); // render days and hours
-            methods._bindRemove(); // bind remove item
+
+            // render days and hours
+            that.find('.render-result').html(render);
+
+            // bind remove item
+            methods._bindRemove.call(self);
         },
 
         // remove items from renderHours
         _bindRemove: function(){
-            $el.find('.remove').on('click', function(event) {
+            var
+                self = this,
+                that = this.self;
+
+            that.find('.remove').on('click', function(event) {
                 event.preventDefault();
                 var id = $(this).data('id'), aux = [], count = 0; // declare
                 $.each(methods.result, function(key, obj) {
@@ -188,15 +199,21 @@
                     }
                 });
                 methods.result = aux; // replace new json
-                methods.renderHours(); // render again, because refresh the id from method.result
-                methods._updateHiddenVal(); // update value
+                methods.renderHours.call(self); // render again, because refresh the id from method.result
+                methods._updateHiddenVal.call(self); // update value
             });
         },
 
         // update field hidden when submit or render by options.firstRenderThis
         _updateHiddenVal: function(){
-            var $hidden = $el.find('input[name=h'+elx+']'); // get hidden
-            this.result.length ? $hidden.val( JSON.stringify(this.result) ) : $hidden.val(''); // value in hidden input
+            var
+                that      = this.self,
+                elx       = this.elx,
+                $hidden   = that.find('input[name=h'+elx+']'), // get hidden
+                hiddenVal = methods.result.length ? JSON.stringify(methods.result) : ''; // value in hidden input
+
+            // set value
+            $hidden.val(hiddenVal);
         },
 
         result: [], // partial json days hours
@@ -206,15 +223,16 @@
     var utils = {
         /**
          * Format days
-         * Get [lun, mar, mie, sab]. Response lun-mie, sab
+         * Get [lun, mar, mie, sab]. Return lun-mie, sab
          */
         formatDays: function(json){
-            var aux = '',
-                key = 0,
-                compare = methods.options.days,
-                length = json.length,
-                range = [],
-                getKey = function(array, value){
+            var
+                aux     = '',
+                key     = 0,
+                compare = methods.opt.days,
+                length  = json.length,
+                range   = [],
+                getKey  = function(array, value){
                     for (var i = 0; i < array.length; i++) {
                         if (array[i] == value) return i;
                     }
@@ -308,6 +326,23 @@
             }
             return true;
         },
+    };
+
+    $.fn.openDoors = function(method) {
+        if (methods[method]) {
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        } else if (typeof method === 'object' || !method) {
+            return methods.init.apply(this, arguments);
+        } else {
+            $.error('Method ' + method + ' does not exist!');
+        }
+    };
+
+    $.fn.openDoors.defaults = {
+        days: ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'], // weeks day
+        firstRenderThis: false, // string json format
+        readOnly: false,
+        onAfterSave: function(){},
     };
 
 })(jQuery);
