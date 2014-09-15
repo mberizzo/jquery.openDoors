@@ -1,0 +1,28 @@
+{
+  "name": "jquery.openDoors",
+  "main": "jquery.openDoors.js",
+  "version": "1.0",
+  "homepage": "https://github.com/mberizzo/jquery.openDoors",
+  "authors": [
+    "Matias Berizzo <matias@bmestudio.com.ar>"
+  ],
+  "description": "Set open/close doors hours",
+  "keywords": [
+    "jquery",
+    "plugin",
+    "open",
+    "doors",
+    "opendoors",
+    "hour",
+    "business"
+    "businesshour"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
